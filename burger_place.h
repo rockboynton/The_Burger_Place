@@ -7,11 +7,14 @@
 #include <stdio.h>
 #include <semaphore.h>
 
-ll_t* burger_tray;
-ll_t* fry_tray;
+static const char* BURGER = "BURGER";
+static const char* FRY_ORDER = "FRY_ORDER";
 
-sem_t burgers_ready;
-sem_t fries_ready;
+ll_t *burger_tray;
+ll_t *fry_tray;
+
+sem_t *burgers_ready;
+sem_t *fries_ready;
 
 typedef struct {
     int burger_cooks;
@@ -26,18 +29,15 @@ typedef struct {
 } Fries;
 
 typedef struct {
-    int num_customers;
-    int orders_filled;
-} Customers;
-
-typedef struct {
     int burgers;
+    int fry_orders;
+    int wait_time;
     int orders_filled;
 } Customer;
 
 Burgers* burgers;
 Fries* fries;
-Customers* customers;
+int num_customers;
 
 void simulate(FILE* input);
 
@@ -59,7 +59,7 @@ void burger_place_init();
  * @param Customers 
  * @return void* 
  */
-void *customer(void *Customers);
+void *customer_thread(void *Customers);
 
 
 // Cooks
@@ -70,7 +70,7 @@ void *customer(void *Customers);
  * @param Cook - either a burger cook or a fry cook 
  * @return void* 
  */
-void *cook(void *Cook);
+void *cook_thread(void *Cook);
 
 // place on warming tray
 
