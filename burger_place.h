@@ -13,17 +13,17 @@ static const char* FRY_ORDER = "FRY_ORDER";
 ll_t *burger_tray;
 ll_t *fry_tray;
 
-sem_t *burgers_ready;
-sem_t *fries_ready;
+sem_t burgers_ready;
+sem_t fries_ready;
 
 typedef struct {
-    int burger_cooks;
+    int num_burger_cooks;
     int burger_cook_time; // microseconds
     int burgers_per_cook;
 } Burgers;
 
 typedef struct {
-    int fryers;
+    int num_fryers;
     int fry_serving_cook_time; // microseconds
     int fry_servings_per_cook;
 } Fries;
@@ -78,6 +78,15 @@ void *cook_thread(void *Cook);
 // Fryer Operator
 
 // place on warming tray
+
+// Helper functions defined here to facilitate testing
+void parse_input(FILE* input);
+
+void burger_cooks_init();
+
+void fryers_init();
+
+void customers_init(FILE *input, pthread_t customers[]);
 
 #endif
 
