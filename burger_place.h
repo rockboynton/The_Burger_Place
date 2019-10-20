@@ -12,9 +12,12 @@ static const char* FRY_ORDER = "FRY_ORDER";
 
 ll_t *burger_tray;
 ll_t *fry_tray;
+ll_t *line;
 
 sem_t burgers_ready;
 sem_t fries_ready;
+
+pthread_mutex_t order_counter;
 
 typedef struct {
     int num_burger_cooks;

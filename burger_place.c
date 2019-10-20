@@ -2,22 +2,31 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 
 void simulate(FILE* input) {
     burger_place_init();
     parse_input(input);
-    // num_burger_cooks_init();
-    // fry_cooks_init();
+    
 }
 
 void burger_place_init() {
+    // initialize trays
     burger_tray = ll_new(ll_no_teardown); // ll values are not malloced
     fry_tray = ll_new(ll_no_teardown); // ll values are not malloced
 
+    // initialize customer line
+    line = ll_new(ll_no_teardown);
+
+    // initialize semaphores
     sem_init(&burgers_ready, 0, 0);
     sem_init(&fries_ready, 0, 0); 
 
+    // initialize mutex
+    pthread_mutex_init(&order_counter, NULL); // fast mutex
+
+    // initialize burger and fry info structs
     burgers = malloc(sizeof(Burgers));
     fries = malloc(sizeof(Fries));
 }
@@ -46,14 +55,33 @@ void parse_input(FILE* input) {
 }
 
 
-void *customer_thread(void *Customer) {
-    // TODO
-    printf("in customer thread\n");
+void *customer_thread(void *customer) {
+    while (ll_get_first(line) != customer) {
+        usleep(1);
+    }
+    ll_remove_first(line);
+
+    for (int i = 0; i < ((Customer *)customer)->burgers; i++) {
+        // pthread_mutex_lock(&order_counter);
+        sem_wait(&burgers_ready);
+        ll_get_first(burger_tray); // ? do I even need this?
+        // pthread_mutex_unlock(&order_counter);
+    }
+    for (int i = 0; i < ((Customer *)customer)->fry_orders; i++) {
+        // pthread_mutex_lock(&order_counter);
+        sem_wait(&fries_ready);
+        ll_get_first(fry_tray); // ? do I even need this?
+        // pthread_mutex_unlock(&order_counter);
+    }
+    ((Customer *)customer)->orders_filled++;
+    usleep(((Customer *)customer)->wait_time);
+    ll_insert_last(line, customer);
 }
 
 
-void *cook_thread(void *Cook) {
+void *cook_thread(void *cook) {
     // TODO
+    for (int i = 0; i < ((B)))
     printf("in cook thread\n");
 }
 
@@ -79,7 +107,10 @@ void customers_init(FILE *input, pthread_t customers[]) {
         fscanf(input, "%d", &(customer->fry_orders));
         fscanf(input, "%d", &(customer->wait_time));
         customer->orders_filled = 0;
+        ll_insert_first(line, customer);
 
         pthread_create(&customers[i], NULL, customer_thread, (void *)customer);
     }
+
+    //  ? do i need to create the linked list first, then spawn the threads?
 }
