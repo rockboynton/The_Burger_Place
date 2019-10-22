@@ -3,4 +3,6 @@
 
 void burger_test_suite();
 
+void test_customer_thread();
+
 #endif

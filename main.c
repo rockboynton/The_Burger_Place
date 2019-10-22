@@ -7,7 +7,7 @@
 
 
 int main(int argc, char* argv[]) {
-    printf("Welcome to The Burger Place!\n");
+    printf("The Burger Place\n");
     if (argc == 2) {
         if (!strcmp("--test", argv[1])) {
             burger_test_suite();

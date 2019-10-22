@@ -10,6 +10,10 @@
 static const char* BURGER = "BURGER";
 static const char* FRY_ORDER = "FRY_ORDER";
 
+int done;
+int max_burgers;
+int max_fries;
+
 ll_t *burger_tray;
 ll_t *fry_tray;
 ll_t *line;
@@ -20,16 +24,14 @@ sem_t fries_ready;
 pthread_mutex_t order_counter;
 
 typedef struct {
-    int num_burger_cooks;
     int burger_cook_time; // microseconds
     int burgers_per_cook;
-} Burgers;
+} Burger_Cook;
 
 typedef struct {
-    int num_fryers;
     int fry_serving_cook_time; // microseconds
     int fry_servings_per_cook;
-} Fries;
+} Fryer;
 
 typedef struct {
     int burgers;
@@ -38,9 +40,9 @@ typedef struct {
     int orders_filled;
 } Customer;
 
-Burgers* burgers;
-Fries* fries;
 int num_customers;
+int num_burger_cooks;
+int num_fryers;
 
 void simulate(FILE* input);
 
@@ -49,6 +51,9 @@ void simulate(FILE* input);
  * 
  */
 void burger_place_init();
+
+
+void burger_place_destroy();
 
 // Customers:
 
@@ -59,6 +64,8 @@ void burger_place_init();
 /**
  * @brief Customer thread routine
  * 
+ * A customer waits in line
+ * 
  * @param Customers 
  * @return void* 
  */
@@ -68,12 +75,20 @@ void *customer_thread(void *Customers);
 // Cooks
 
 /**
- * @brief Cook thread routine
+ * @brief burger_cook thread routine
  * 
- * @param Cook - either a burger cook or a fry cook 
+ * @param burger_cook - a burger cook
  * @return void* 
  */
-void *cook_thread(void *Cook);
+void *burger_cook_thread(void *burger_cook);
+
+/**
+ * @brief fryer thread routine
+ * 
+ * @param fryer - a fryer
+ * @return void* 
+ */
+void *fryer_thread(void *fryer);
 
 // place on warming tray
 
