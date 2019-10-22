@@ -65,24 +65,23 @@ void parse_input(FILE* input) {
         pthread_join(burger_cooks[i], NULL);
     }
     printf("Burger Cooks done:\n");
+
     for (int i = 0; i < num_fryers; i++) {
         pthread_join(fryers[i], NULL);
     }
     printf("Fry Cooks done:\n");
 
-    done = 1;
+    done = 1; // ? do I need to wait for warming trays to be empty too?
+
     printf("Simulation finished:\n");
     printf("Max burgers in the burger warmer: %d\n", max_burgers);
     printf("Max fries in the fry warmer: %d\n", max_fries);
-
-
 
     for (int i = 0; i < num_customers; i++) {
         int orders_filled;
         pthread_join(customers[i], (void *)&orders_filled);
         printf("Joined Customer: %d\n", i);
-        printf("%d\n", orders_filled);
-        // printf("Customer %d got their order filled %d times\n", i, customer->orders_filled);
+        printf("Customer %d got their order filled %d times\n", i, orders_filled);
     }
 
     printf("Goodbye!\n");
@@ -92,37 +91,38 @@ void parse_input(FILE* input) {
 
 void *customer_thread(void *customer) {
     printf("In customer thread\n");
-    while (1) {
-        while (ll_get_first(line) != customer) {
+    while (!done) {
+        while (ll_get_first(line) != customer && !done) {
             usleep(1);
         }
-        ll_remove_first(line);
-
+    
+        pthread_mutex_lock(&order_counter);// ? do I even need this?
         for (int i = 0; i < ((Customer *)customer)->burgers; i++) {
-            pthread_mutex_lock(&order_counter);
+            // pthread_mutex_lock(&order_counter);
             sem_wait(&burgers_ready);
-            ll_get_first(burger_tray); // ? do I even need this?
-            pthread_mutex_unlock(&order_counter);
+            ll_remove_first(burger_tray); // ? do I even need this?
+            // pthread_mutex_unlock(&order_counter);
         }
         if (done == 1) {
-            pthread_exit(customer);
+            break;
         }
         for (int i = 0; i < ((Customer *)customer)->fry_orders; i++) {
-            pthread_mutex_lock(&order_counter);
+            // pthread_mutex_lock(&order_counter);
             sem_wait(&fries_ready);
-            ll_get_first(fry_tray); // ? do I even need this?
-            pthread_mutex_unlock(&order_counter);
+            ll_remove_first(fry_tray); // ? do I even need this?
+            // pthread_mutex_unlock(&order_counter);
         }
+        pthread_mutex_unlock(&order_counter);// ? do I even need this?
+
         ((Customer *)customer)->orders_filled++;
+        ll_remove_first(line);
         usleep(((Customer *)customer)->wait_time);
         ll_insert_last(line, customer);
-        if (done == 1) {
-            printf("Exiting\n");
-            int *orders_filled = malloc(sizeof(int));
-            *orders_filled = ((Customer *)customer)->orders_filled;
-            pthread_exit((void *) orders_filled);
-        }
     }
+    printf("Exiting\n");
+    int *orders_filled = malloc(sizeof(int));
+    *orders_filled = ((Customer *)customer)->orders_filled;
+    pthread_exit((void *) orders_filled);
 }
 
 
