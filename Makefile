@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-c -Wall -Wextra -g -00 -pthread
-LDFLAGS= -pthread
+LDFLAGS= -pthread -g
 SOURCES= burger_place.c ll.c main.c test_burger_place.c
 OBJECTS=$(SOURCES: .c=.o)
 EXECUTABLE=sim

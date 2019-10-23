@@ -103,9 +103,9 @@ void *customer_thread(void *customer) {
             ll_remove_first(burger_tray); // ? do I even need this?
             // pthread_mutex_unlock(&order_counter);
         }
-        if (done == 1) {
-            break;
-        }
+        // if (done == 1) {
+        //     break;
+        // }
         for (int i = 0; i < ((Customer *)customer)->fry_orders; i++) {
             // pthread_mutex_lock(&order_counter);
             sem_wait(&fries_ready);
