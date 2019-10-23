@@ -104,7 +104,7 @@ void burger_cooks_init();
 
 void fryers_init();
 
-void customers_init(FILE *input, pthread_t customers[]);
+Customer **customers_init(FILE *input, pthread_t customers[]);
 
 #endif
 

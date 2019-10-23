@@ -1,3 +1,24 @@
+/**
+ * @file main.c
+ * @author Rock Boynton (boyntonrl@msoe.edu)
+ * @brief Main for simulating a burger shop
+ * @version 0.1
+ * @date 2019-10-22
+ * 
+ * INTRODUCTION:
+ * 
+ * DESIGN:
+ * 
+ * BUILD INSTRUCTIONS:
+ * 
+ * ANALYSIS:
+ * 
+ * CONCLUSION:
+ * 
+ * 
+ */
+
+
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -15,7 +36,7 @@ int main(int argc, char* argv[]) {
         } else {
             FILE* input = fopen(argv[1], "r");
             if (input == NULL) {
-                printf("ERROR: File invalid\n");
+                printf("ERROR: File invalid\n"); 
                 return -1;
             }
             simulate(input);

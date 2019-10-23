@@ -56,7 +56,7 @@ void parse_input(FILE* input) {
 
     // line 4 to num_customers
     pthread_t customers[num_customers];
-    customers_init(input, customers);
+    Customer **customer_list = customers_init(input, customers);
 
     // sim is now running...
 
@@ -70,6 +70,20 @@ void parse_input(FILE* input) {
         pthread_join(fryers[i], NULL);
     }
     printf("Fry Cooks done:\n");
+    int flag;
+    do {
+        printf("Waiting for burgers to be done\n");
+        sem_getvalue(&burgers_ready, &flag);
+        printf("sem: %d, list: %d", flag, burger_tray->len);
+        usleep(100000);
+    } while (flag > 0);
+
+    do {
+        printf("Waiting for fries to be done\n");
+        sem_getvalue(&fries_ready, &flag);
+        printf("%d", flag);
+        usleep(100000);
+    } while (flag > 0);
 
     done = 1; // ? do I need to wait for warming trays to be empty too?
 
@@ -78,10 +92,10 @@ void parse_input(FILE* input) {
     printf("Max fries in the fry warmer: %d\n", max_fries);
 
     for (int i = 0; i < num_customers; i++) {
-        int orders_filled;
-        pthread_join(customers[i], (void *)&orders_filled);
-        printf("Joined Customer: %d\n", i);
-        printf("Customer %d got their order filled %d times\n", i, orders_filled);
+        // int *orders_filled = malloc(sizeof(int));
+        pthread_join(customers[i], NULL);
+        // printf("Joined Customer: %d\n", i);
+        // printf("Customer %d got their order filled %d times\n", i, (customer_list[i])->orders_filled); 
     }
 
     printf("Goodbye!\n");
@@ -96,9 +110,10 @@ void *customer_thread(void *customer) {
             usleep(1);
         }
     
-        pthread_mutex_lock(&order_counter);// ? do I even need this?
+        // pthread_mutex_lock(&order_counter);// ? do I even need this?
         for (int i = 0; i < ((Customer *)customer)->burgers; i++) {
             // pthread_mutex_lock(&order_counter);
+            printf("taking burger\n");
             sem_wait(&burgers_ready);
             ll_remove_first(burger_tray); // ? do I even need this?
             // pthread_mutex_unlock(&order_counter);
@@ -112,7 +127,7 @@ void *customer_thread(void *customer) {
             ll_remove_first(fry_tray); // ? do I even need this?
             // pthread_mutex_unlock(&order_counter);
         }
-        pthread_mutex_unlock(&order_counter);// ? do I even need this?
+        // pthread_mutex_unlock(&order_counter);// ? do I even need this?
 
         ((Customer *)customer)->orders_filled++;
         ll_remove_first(line);
@@ -120,22 +135,27 @@ void *customer_thread(void *customer) {
         ll_insert_last(line, customer);
     }
     printf("Exiting\n");
-    int *orders_filled = malloc(sizeof(int));
-    *orders_filled = ((Customer *)customer)->orders_filled;
-    pthread_exit((void *) orders_filled);
+    pthread_exit(EXIT_SUCCESS);
 }
 
 
 void *burger_cook_thread(void *burger_cook) {
     printf("In burger_cook thread\n");
     for (int i = 0; i < ((Burger_Cook *)burger_cook)->burgers_per_cook; i++) {
+        // cook burger
         usleep(((Burger_Cook *)burger_cook)->burger_cook_time);
+
+        // add it to tray
         ll_insert_last(burger_tray, "BURGER");
+
+        // update max if neccasary
         int burgers_in_tray;
         sem_getvalue(&burgers_ready, &burgers_in_tray);
         if (burgers_in_tray + 1 > max_burgers) {
             max_burgers++; // maybe add a mutex
+            printf("max burgers: %d \n", max_burgers);
         }
+
         sem_post(&burgers_ready);
     }
     pthread_exit(EXIT_SUCCESS);
@@ -182,7 +202,8 @@ void fryers_init(FILE* input, pthread_t fryers[]) {
 }
 
 
-void customers_init(FILE *input, pthread_t customers[]) {
+Customer ** customers_init(FILE *input, pthread_t customers[]) {
+    Customer **customer_list = (Customer **) malloc(sizeof(Customer*) * num_customers);
     for (int i = 0; i < num_customers; i++) {
         Customer *customer = malloc(sizeof(Customer));
         fscanf(input, "%d", &(customer->burgers));
@@ -195,6 +216,8 @@ void customers_init(FILE *input, pthread_t customers[]) {
         printf("Customer %d - Burgers: %d  Fries: %d Wait: %d\n", 
                 i, customer->burgers, customer->fry_orders, customer->wait_time);
         pthread_create(&customers[i], NULL, customer_thread, (void *)customer);
+        customer_list[i] = customer;
+        return customer_list; 
     }
 
     //  ? do i need to create the linked list first, then spawn the threads?
