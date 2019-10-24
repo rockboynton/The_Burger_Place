@@ -1,3 +1,31 @@
+/**
+ * @file main.c
+ * @author Rock Boynton (boyntonrl@msoe.edu)
+ * @brief Main for simulating a burger shop
+ * @version 0.1
+ * @date 2019-10-22
+ * 
+ * INTRODUCTION: 
+ *  The purpose of this lab is to practice implementing multithreading in C
+ *  programs. It simulates a burger shop where there are a ccertain number of
+ *  cooks, fryers, and customers per simulation. Each entity can be a thread,
+ *  with its corresponding thread routine determined by its action. Burger cooks
+ *  have a burger_cook_thread, etc. 
+ * 
+ * The cooks take a certain amount of time to cook their food, which is modeled
+ * by a usleep call
+ * 
+ * DESIGN:
+ * 
+ * BUILD INSTRUCTIONS:
+ * 
+ * ANALYSIS:
+ * 
+ * CONCLUSION:
+ * 
+ * 
+ */
+
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
