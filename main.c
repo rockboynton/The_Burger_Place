@@ -48,12 +48,30 @@
  *      his order filled a lot more, but then again he is only getting fries and
  *      no burgers so it makes sense he will take longer.
  * 
- *      What I think of fair is when al threads have equal access to the processor, proportional to the 
+ *      What I think of fair is when all threads have equal access to the 
+ *      processor, proportional to the length of its process. 
  * 
+ *      If the customer was skipped, instead of holding up the line until their 
+ *      order was ready, it wouldn't be fair, because customers with more 
+ *      burgers/fries in their order would be skipped more often, in favor of 
+ *      customers with less.
  *  
+ *  Number System:
+ *      To use a number system, you couldn't just have the customer wait on a 
+ *      burger/fry semaphore, you would have to have a semaphore increment when
+ *      the full order is ready. 
+ * 
+ *  Warmer Limit:
+ *      If there was a limit on the warmers, you would have to have the cooks 
+ *      block when the warmers reach until the customer has taken the food from 
+ *      the warmers, then they can add food again.
  * 
  * CONCLUSION:
- * 
+ *  This was a VERY challenging lab. I think it would help a ton if we were
+ *  given a thread safe version of a linked list that we know works so we could
+ *  focus on the actual multithreaded program without having to worry about it.
+ *  I ended up having a problem with the one that I used without knowing because
+ *  I thought it was working. 
  * 
  */
 
