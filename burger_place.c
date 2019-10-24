@@ -42,6 +42,8 @@ void burger_place_destroy() {
     sem_destroy(&fries_ready);
     pthread_mutex_destroy(&order_counter);
     pthread_mutex_destroy(&m);
+    pthread_mutex_destroy(&burger_list_m);
+    pthread_mutex_destroy(&fries_list_m);
 }
 
 
@@ -95,7 +97,6 @@ void parse_input(FILE* input) {
     for (int i = 0; i < num_customers; i++) {
         free(cs[i]);
     }
-    free(cs);
     
 }
 

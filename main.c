@@ -19,6 +19,7 @@ int main(int argc, char* argv[]) {
                 return -1;
             }
             simulate(input);
+            fclose(input);
         }
     } else if (argc < 3 || argc > 4) {
         printf("ERROR: Please specify a single input file\n");
