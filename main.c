@@ -44,6 +44,13 @@ int main(int argc, char* argv[]) {
             FILE* input = fopen(argv[1], "r");
             if (input == NULL) {
                 printf("ERROR: File invalid\n");
+
+
+
+
+
+
+            
                 return -1;
             }
             simulate(input);

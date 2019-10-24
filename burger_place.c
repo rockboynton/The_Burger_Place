@@ -79,7 +79,7 @@ void parse_input(FILE* input) {
 
     for (int i = 0; i < num_customers; i++) {
         int orders_filled;
-        pthread_join(customers[i], (void *)&orders_filled);
+        pthread_join(customers[i], NULL);
         printf("Joined Customer: %d\n", i);
         printf("Customer %d got their order filled %d times\n", i, orders_filled);
     }
