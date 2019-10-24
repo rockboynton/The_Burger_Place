@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <semaphore.h>
 
-static const char* BURGER = "BURGER";
-static const char* FRY_ORDER = "FRY_ORDER";
+// static char* BURGER = "BURGER";
+// static char* FRY_ORDER = "FRY_ORDER";
 
 int done;
 int max_burgers;
@@ -22,6 +22,10 @@ sem_t burgers_ready;
 sem_t fries_ready;
 
 pthread_mutex_t order_counter;
+pthread_mutex_t burger_list_m;
+pthread_mutex_t fries_list_m;
+pthread_mutex_t m;
+// pthread_mutex_t 
 
 typedef struct {
     int burger_cook_time; // microseconds

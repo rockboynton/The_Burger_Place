@@ -28,6 +28,9 @@ void burger_place_init() {
 
     // initialize mutex
     pthread_mutex_init(&order_counter, NULL); // fast mutex
+    pthread_mutex_init(&burger_list_m, NULL);
+    pthread_mutex_init(&fries_list_m, NULL);
+    pthread_mutex_init(&m, NULL);
 }
 
 
@@ -39,6 +42,7 @@ void burger_place_destroy() {
     sem_destroy(&fries_ready);
     pthread_mutex_destroy(&order_counter);
 }
+
 
 void parse_input(FILE* input) {
     // line 1
@@ -89,80 +93,11 @@ void parse_input(FILE* input) {
 }
 
 
-void *customer_thread(void *customer) {
-    printf("In customer thread\n");
-    while (!done) {
-        while (ll_get_first(line) != customer && !done) {
-            usleep(1);
-        }
-    
-        pthread_mutex_lock(&order_counter);// ? do I even need this?
-        for (int i = 0; i < ((Customer *)customer)->burgers; i++) {
-            // pthread_mutex_lock(&order_counter);
-            sem_wait(&burgers_ready);
-            ll_remove_first(burger_tray); // ? do I even need this?
-            // pthread_mutex_unlock(&order_counter);
-        }
-        // if (done == 1) {
-        //     break;
-        // }
-        for (int i = 0; i < ((Customer *)customer)->fry_orders; i++) {
-            // pthread_mutex_lock(&order_counter);
-            sem_wait(&fries_ready);
-            ll_remove_first(fry_tray); // ? do I even need this?
-            // pthread_mutex_unlock(&order_counter);
-        }
-        pthread_mutex_unlock(&order_counter);// ? do I even need this?
-
-        ((Customer *)customer)->orders_filled++;
-        ll_remove_first(line);
-        usleep(((Customer *)customer)->wait_time);
-        ll_insert_last(line, customer);
-    }
-    printf("Exiting\n");
-    int *orders_filled = malloc(sizeof(int));
-    *orders_filled = ((Customer *)customer)->orders_filled;
-    pthread_exit((void *) orders_filled);
-}
-
-
-void *burger_cook_thread(void *burger_cook) {
-    printf("In burger_cook thread\n");
-    for (int i = 0; i < ((Burger_Cook *)burger_cook)->burgers_per_cook; i++) {
-        usleep(((Burger_Cook *)burger_cook)->burger_cook_time);
-        ll_insert_last(burger_tray, "BURGER");
-        int burgers_in_tray;
-        sem_getvalue(&burgers_ready, &burgers_in_tray);
-        if (burgers_in_tray + 1 > max_burgers) {
-            max_burgers++; // maybe add a mutex
-        }
-        sem_post(&burgers_ready);
-    }
-    pthread_exit(EXIT_SUCCESS);
-}
-
-
-void *fryer_thread(void *fryer) {
-    printf("In fryer thread\n");
-    for (int i = 0; i < ((Fryer *)fryer)->fry_servings_per_cook; i++) {
-        usleep(((Fryer *)fryer)->fry_serving_cook_time);
-        ll_insert_last(fry_tray, "FRIES");
-        int fries_in_tray;
-        sem_getvalue(&fries_ready, &fries_in_tray);
-        if (fries_in_tray + 1 > max_fries) {
-            max_fries++; // maybe add a mutex
-        }
-        sem_post(&fries_ready);
-    }
-    pthread_exit(EXIT_SUCCESS);
-}
-
-
 void burger_cooks_init(FILE* input, pthread_t burger_cooks[]) {
     Burger_Cook *burger_cook = malloc(sizeof(Burger_Cook));
     fscanf(input, "%d", &(burger_cook->burger_cook_time));
     fscanf(input, "%d", &(burger_cook->burgers_per_cook));
-    printf("Burger Cooks - Number: %d  Time: %d Total: %d\n", 
+    printf("Burger Cooks - Number: %d Time: %d Total: %d\n", 
                 num_burger_cooks, burger_cook->burger_cook_time, burger_cook->burgers_per_cook);
     for (int i = 0; i < num_burger_cooks; i++) {
         pthread_create(&burger_cooks[i], NULL, burger_cook_thread, (void *) burger_cook);
@@ -198,4 +133,110 @@ void customers_init(FILE *input, pthread_t customers[]) {
     }
 
     //  ? do i need to create the linked list first, then spawn the threads?
+}
+
+static int max ( int a, int b ) { return a > b ? a : b; }
+
+void *burger_cook_thread(void *burger_cook) {
+    printf("In burger_cook thread\n");
+    Burger_Cook this_burger_cook = *((Burger_Cook *)burger_cook);
+    for (int i = 0; i < this_burger_cook.burgers_per_cook; i++) {
+        // cook burger
+        usleep(this_burger_cook.burger_cook_time);
+
+        // add to burger tray
+        pthread_mutex_lock(&m);
+        ll_insert_first(burger_tray, "*");
+
+        // update max 
+        // int burgers_in_tray;
+        // sem_getvalue(&burgers_ready, &burgers_in_tray);
+        // max_burgers = max(burgers_in_tray, max_burgers);
+
+        // signal burgers are ready
+        // sem_post(&burgers_ready);
+        pthread_mutex_unlock(&m);
+    }
+    pthread_exit(EXIT_SUCCESS);
+}
+
+
+void *fryer_thread(void *fryer) {
+    printf("In fryer thread\n");
+    Fryer this_fryer = *((Fryer *)fryer);
+    for (int i = 0; i < this_fryer.fry_servings_per_cook; i++) {
+        // cook fries
+        usleep(this_fryer.fry_serving_cook_time);
+
+        // add to fry tray
+        pthread_mutex_lock(&m);
+        ll_insert_first(fry_tray, "*");
+        
+        // update max
+        // int fries_in_tray;
+        // sem_getvalue(&fries_ready, &fries_in_tray);
+        // max_fries = max(fries_in_tray, max_fries);
+
+        // signal fries are ready
+        // sem_post(&fries_ready);
+        pthread_mutex_unlock(&m);
+    }
+    pthread_exit(EXIT_SUCCESS);
+}
+
+
+static void check_done() {
+    if (done == 1) {
+        // int *orders_filled = malloc(sizeof(int));
+        // *orders_filled = ((Customer *)customer)->orders_filled;
+        // pthread_exit((void *) orders_filled);
+        pthread_exit(EXIT_SUCCESS);
+    }
+}
+
+
+void *customer_thread(void *customer) {
+    printf("In customer thread\n");
+    Customer this_customer = *((Customer *)customer);
+    while (1) {
+        int flag = -1;
+        // pthread_mutex_lock(&order_counter);// ? do I even need this?
+        for (int i = 0; i < this_customer.burgers; i++) {
+            while (flag == -1) {
+                pthread_mutex_lock(&m);
+                // sem_wait(&burgers_ready);
+                flag = ll_remove_first(burger_tray); // ? do I even need this?
+                pthread_mutex_unlock(&m); 
+                check_done();
+            }
+            flag = -1;
+        }
+        for (int i = 0; i < this_customer.fry_orders; i++) {
+            while (flag == -1) {
+                pthread_mutex_lock(&m);
+                // sem_wait(&fries_ready);
+                flag = ll_remove_first(fry_tray); // ? do I even need this?
+                pthread_mutex_unlock(&fries_list_m);
+                check_done();
+            }
+            flag = -1;
+        }
+        // pthread_mutex_unlock(&order_counter);// ? do I even need this?
+
+        ((Customer *)customer)->orders_filled = ((Customer *)customer)->orders_filled + 1;
+
+        // pthread_mutex_lock(&order_counter);
+        // ll_remove_first(line);
+        // pthread_mutex_unlock(&order_counter);
+
+        // wait till hungry again
+        usleep(this_customer.wait_time);
+
+        // pthread_mutex_lock(&order_counter);
+        // ll_insert_last(line, customer);
+        // pthread_mutex_unlock(&order_counter);
+        // check_done(customer);
+    }
+    // printf("Exiting\n");
+    return NULL;
 }
