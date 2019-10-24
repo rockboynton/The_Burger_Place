@@ -41,6 +41,7 @@ void burger_place_destroy() {
     sem_destroy(&burgers_ready);
     sem_destroy(&fries_ready);
     pthread_mutex_destroy(&order_counter);
+    pthread_mutex_destroy(&m);
 }
 
 
@@ -48,19 +49,20 @@ void parse_input(FILE* input) {
     // line 1
     fscanf(input, "%d", &(num_burger_cooks));
     pthread_t burger_cooks[num_burger_cooks];
-    burger_cooks_init(input, burger_cooks);
+    Burger_Cook *burger_struct = burger_cooks_init(input, burger_cooks);
 
     // line 2
     fscanf(input, "%d", &(num_fryers));
     pthread_t fryers[num_fryers];
-    fryers_init(input, fryers);
+    Fryer *fryer_struct = fryers_init(input, fryers);
 
     // line 3
     fscanf(input, "%d", &(num_customers));
 
     // line 4 to num_customers
     pthread_t customers[num_customers];
-    Customer **cs = malloc(sizeof(Customer *) * num_customers);
+    // Customer **cs = malloc(sizeof(Customer *) * num_customers);
+    Customer *cs[num_customers];
     customers_init(input, customers, cs);
 
     // sim is now running...
@@ -88,10 +90,17 @@ void parse_input(FILE* input) {
         printf("Joined Customer: %d\n", i);
         printf("Customer %d got their order filled %d times\n", i, cs[i]->orders_filled);
     }
+    free(burger_struct);
+    free(fryer_struct);
+    for (int i = 0; i < num_customers; i++) {
+        free(cs[i]);
+    }
+    free(cs);
+    
 }
 
 
-void burger_cooks_init(FILE* input, pthread_t burger_cooks[]) {
+Burger_Cook *burger_cooks_init(FILE* input, pthread_t burger_cooks[]) {
     Burger_Cook *burger_cook = malloc(sizeof(Burger_Cook));
     fscanf(input, "%d", &(burger_cook->burger_cook_time));
     fscanf(input, "%d", &(burger_cook->burgers_per_cook));
@@ -100,10 +109,11 @@ void burger_cooks_init(FILE* input, pthread_t burger_cooks[]) {
     for (int i = 0; i < num_burger_cooks; i++) {
         pthread_create(&burger_cooks[i], NULL, burger_cook_thread, (void *) burger_cook);
     }
+    return burger_cook;
 }
 
 
-void fryers_init(FILE* input, pthread_t fryers[]) {
+Fryer *fryers_init(FILE* input, pthread_t fryers[]) {
     Fryer *fryer = malloc(sizeof(Fryer));
     fscanf(input, "%d", &(fryer->fry_serving_cook_time));
     fscanf(input, "%d", &(fryer->fry_servings_per_cook));
@@ -112,6 +122,7 @@ void fryers_init(FILE* input, pthread_t fryers[]) {
     for (int i = 0; i < num_fryers; i++) {
         pthread_create(&fryers[i], NULL, fryer_thread, (void *) fryer);
     }
+    return fryer;
 }
 
 
@@ -176,6 +187,7 @@ void *fryer_thread(void *fryer) {
 
 static void check_done() {
     if (done == 1) {
+        pthread_mutex_unlock(&order_counter);
         pthread_exit(EXIT_SUCCESS);
     }
 }
@@ -184,6 +196,7 @@ static void check_done() {
 void *customer_thread(void *customer) {
     Customer this_customer = *((Customer *)customer);
     while (1) {
+        pthread_mutex_lock(&order_counter);
         int flag = -1;
         for (int i = 0; i < this_customer.burgers; i++) {
             while (flag == -1) {
@@ -205,6 +218,7 @@ void *customer_thread(void *customer) {
             }
             flag = -1;
         }
+        pthread_mutex_unlock(&order_counter);
 
         ((Customer *)customer)->orders_filled = ((Customer *)customer)->orders_filled + 1;
 

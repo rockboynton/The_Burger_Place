@@ -104,9 +104,9 @@ void *fryer_thread(void *fryer);
 // Helper functions defined here to facilitate testing
 void parse_input(FILE* input);
 
-void burger_cooks_init();
+Burger_Cook *burger_cooks_init();
 
-void fryers_init();
+Fryer *fryers_init();
 
 void customers_init(FILE *input, pthread_t customers[], Customer **cs);
 
