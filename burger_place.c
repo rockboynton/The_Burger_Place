@@ -82,8 +82,9 @@ void parse_input(FILE* input) {
     printf("Max fries in the fry warmer: %d\n", max_fries);
 
     for (int i = 0; i < num_customers; i++) {
-        int orders_filled;
-        pthread_join(customers[i], (void *)&orders_filled);
+	printf("hey guys..\n");
+        int orders_filled = 0;
+        pthread_join(customers[i],NULL);
         printf("Joined Customer: %d\n", i);
         printf("Customer %d got their order filled %d times\n", i, orders_filled);
     }
@@ -205,7 +206,7 @@ void *customer_thread(void *customer) {
             while (flag == -1) {
                 pthread_mutex_lock(&m);
                 // sem_wait(&burgers_ready);
-                flag = ll_remove_first(burger_tray); // ? do I even need this?
+                flag = 0;//ll_remove_first(burger_tray); // ? do I even need this?
                 pthread_mutex_unlock(&m); 
                 check_done();
             }
@@ -215,8 +216,8 @@ void *customer_thread(void *customer) {
             while (flag == -1) {
                 pthread_mutex_lock(&m);
                 // sem_wait(&fries_ready);
-                flag = ll_remove_first(fry_tray); // ? do I even need this?
-                pthread_mutex_unlock(&fries_list_m);
+                flag = 0;//ll_remove_first(fry_tray); // ? do I even need this?
+                pthread_mutex_unlock(&m);
                 check_done();
             }
             flag = -1;
