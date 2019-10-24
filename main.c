@@ -1,3 +1,62 @@
+/**
+ * @file main.c
+ * @author Rock Boynton (boyntonrl@msoe.edu)
+ * @brief Main for simulating a burger shop
+ * @version 0.1
+ * @date 2019-10-22
+ * 
+ * INTRODUCTION: 
+ *  The purpose of this lab is to practice implementing multithreading in C
+ *  programs. It simulates a burger shop where there are a certain number of
+ *  cooks, fryers, and customers per simulation. Each entity can be a thread,
+ *  with its corresponding thread routine determined by its action. Burger cooks
+ *  have a burger_cook_thread, etc. 
+ * 
+ * DESIGN:
+ *  I read in the threads using the same method I have previous which is trivial
+ *  at this point. As I read the info in, I create the threads.
+ * 
+ *  The cooks take a certain amount of time to cook their food, which is modeled
+ *  a usleep call. Their is a mutex that locks before inserting the food on
+ *  its corresponding tray. It then updates its max if needed and unlocks the
+ *  mutex. Each cook repeats that process for however many food servings they
+ *  have to cook.
+ * 
+ *  The customers lock their mutex when they're at the order counter, then lock
+ *  try to get their food off of the trays locking and unlocking the mutex when
+ *  needed. Each time it checks for a food serving on the warming tray, it
+ *  should check to see if the cooks are all done (using a global done variable)
+ *  and exit if they are done. If the customers order was completely filled,
+ *  then it records that and waits for its specified time and repeats that
+ *  process until the day is over.
+ * 
+ * 
+ * BUILD INSTRUCTIONS:
+ * 
+ * $ make
+ * $ ./sim sim_file.txt
+ * 
+ * ANALYSIS:
+ *  To be completely honest, I had a lot of help from Draven to get a working
+ *  program. I was originally using semaphores to simplify some things rather
+ *  than using flags and continuously attempting to remove. There is a lot of
+ *  busy waiting in this implementation abd therefore I don't think the method
+ *  that I used was the most efficient/best...but it works.
+ * 
+ *  Fairness:
+ *      It seems relatively fair except for the fact that the last customer gets
+ *      his order filled a lot more, but then again he is only getting fries and
+ *      no burgers so it makes sense he will take longer.
+ * 
+ *      What I think of fair is when al threads have equal access to the processor, proportional to the 
+ * 
+ *  
+ * 
+ * CONCLUSION:
+ * 
+ * 
+ */
+
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
