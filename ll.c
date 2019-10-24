@@ -256,6 +256,7 @@ int ll_insert_last(ll_t *list, void *val) {
  * @returns the new length of thew linked list on success, -1 otherwise
  */
 int ll_remove_n(ll_t *list, int n) {
+    if (n == 0 && list->len == 0) return -1;
     ll_node_t *tmp;
     if (n == 0) {
         RWLOCK(l_write, list->m);
